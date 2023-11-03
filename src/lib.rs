@@ -41,62 +41,16 @@ pub struct TestConfig {
 #[derive(Debug, Clone, Copy)]
 pub struct VanillaPlonkConfig {
     pub(crate) phase_1_column: Column<Advice>,
-    // pub(crate) phase_2_column: Column<Advice>,
-    // pub(crate) selector: Selector,
-    // pub(crate) fixed: Column<Fixed>,
-    // pub(crate) instance: Column<Instance>
 }
 
 impl TestConfig {
     pub fn configure(meta: &mut ConstraintSystem<Fr>) -> Self {
         let vanilla_plonk_config = {
-            // let selector = meta.complex_selector();
-
             let phase_1_column = meta.advice_column_in(FirstPhase);
             meta.enable_equality(phase_1_column);
-            // // let phase_2_column = meta.advice_column_in(SecondPhase);
-            // // meta.enable_equality(phase_2_column);
 
-            // // let fixed = meta.fixed_column();
-            // // meta.enable_equality(fixed);
-
-            // // let instance = meta.instance_column();
-            // // meta.enable_equality(instance);
-
-            // meta.create_gate("rlc_gate", |meta| {
-            //     // phase_2_column | advice | enable_challenge
-            //     // ---------------|--------|------------------
-            //     // a              | q1     | q2
-            //     // b              | 0      | 0
-            //     // c              | 0      | 0
-            //     // d              | 0      | 0
-            //     //
-            //     // constraint: q1*(a*b+c-d) = 0
-            //     let a = meta.query_advice(phase_1_column, Rotation(0));
-            //     let b = meta.query_advice(phase_1_column, Rotation(1));
-            //     let c = meta.query_advice(phase_1_column, Rotation(2));
-            //     let d = meta.query_advice(phase_1_column, Rotation(3));
-            //     let q1 = meta.query_selector(selector);
-            //     let cs = q1 * (a.clone() * b + c - d);
-
-            //     vec![cs]
-            // });
-            VanillaPlonkConfig {
-                phase_1_column,
-                // phase_2_column,
-                // selector,
-                // fixed,
-                // instance
-            }
+            VanillaPlonkConfig { phase_1_column }
         };
-
-        // let gate_param = FlexGateConfigParams {
-        //     k: 10,
-        //     num_advice_per_phase: vec![2],
-        //     num_fixed: 1,
-        // };
-
-        // let base_field_config = FpConfig::configure(meta, gate_param, &[1], 8);
 
         let base_circuit_param = BaseCircuitParams {
             k: 10,
@@ -145,18 +99,31 @@ impl Circuit<Fr> for TestCircuit {
         } = config;
 
         // assign a cell in halo2 proof
-        let halo2_proof_cell = self.halo2_proof_cell(vanilla_plonk_config, layouter);
-        println!("halo2 proof cell: {:?}", halo2_proof_cell.value());
+        let halo2_proof_cell_2 = self.halo2_proof_cell(vanilla_plonk_config, &mut layouter, 2);
+        let halo2_proof_cell_3 = self.halo2_proof_cell(vanilla_plonk_config, &mut layouter, 3);
+        println!("halo2 proof cell: {:?}", halo2_proof_cell_2.value());
+        println!("halo2 proof cell: {:?}", halo2_proof_cell_3.value());
 
         // load the halo2 proof in halo2-lib
         // first create proving and verifying key
         let mut builder = RangeCircuitBuilder::from_stage(CircuitBuilderStage::Keygen).use_k(10);
         let mut copy_manager = builder.core().copy_manager.lock().unwrap();
-        // let t1 = copy_manager.load_external_assigned(halo2_proof_cell);
+
+        // t1 == 2
         let t1 = {
-            let cell = copy_manager.load_external_cell(halo2_proof_cell.cell());
+            let cell = copy_manager.load_external_cell(halo2_proof_cell_2.cell());
             let mut value = Fr::default();
-            halo2_proof_cell.value().map(|f| value = *f);
+            halo2_proof_cell_2.value().map(|f| value = *f);
+            AssignedValue {
+                value: Assigned::Trivial(value),
+                cell: Some(cell),
+            }
+        };
+        // t2 == 3
+        let t2 = {
+            let cell = copy_manager.load_external_cell(halo2_proof_cell_3.cell());
+            let mut value = Fr::default();
+            halo2_proof_cell_3.value().map(|f| value = *f);
             AssignedValue {
                 value: Assigned::Trivial(value),
                 cell: Some(cell),
@@ -164,18 +131,8 @@ impl Circuit<Fr> for TestCircuit {
         };
         drop(copy_manager);
 
-        // let range = builder.range_chip();
-        // let chip = FpChip::<Fr, Fr>::new(&range, 88, 3);
-        // let gate = chip.gate();
         let chip = GateChip::<Fr>::default();
         let ctx = builder.main(0);
-
-        // let t1 = thread::spawn(move || {
-        // let mut copy_manager = builder.core().copy_manager.lock().unwrap();
-        // let t1 = copy_manager.load_external_cell(halo2_proof_cell.cell());
-        // })
-        // .join()
-        // .unwrap();
 
         let c = chip.add(
             ctx,
@@ -184,25 +141,18 @@ impl Circuit<Fr> for TestCircuit {
         );
         let c2 = ctx.load_witness(self.c);
         ctx.constrain_equal(&c, &c2);
+
+        // c == 3; t1 == 2; t2 == 3;
+        // so the following constraints should fail
         ctx.constrain_equal(&c, &t1);
+        ctx.constrain_equal(&c, &t2);
 
         println!("c: {:?}", c);
         println!("c2: {:?}", c2);
+        println!("t1: {:?}", t1);
+        println!("t2: {:?}", t2);
 
         let config_params = builder.calculate_params(Some(20));
-
-        println!("1");
-        // MockProver::run(10, &builder, vec![])
-        // .unwrap()
-        // .assert_satisfied();
-        println!("2");
-        // let params = ParamsKZG::<Bn256>::setup(10, OsRng);
-        // let vk = keygen_vk(&params, &builder).expect("vk should not fail");
-        // let pk = keygen_pk(&params, vk, &builder).expect("pk should not fail");
-
-        // let break_points = builder.break_points();
-
-        // let mut builder = RangeCircuitBuilder::prover(config_params.clone(), break_points.clone());
 
         Ok(())
     }
@@ -212,7 +162,8 @@ impl TestCircuit {
     fn halo2_proof_cell(
         &self,
         vanilla_plonk_config: VanillaPlonkConfig,
-        mut layouter: impl Layouter<Fr>,
+        layouter: &mut impl Layouter<Fr>,
+        value: u64,
     ) -> AssignedCell<Fr, Fr> {
         // assign a cell in halo2 proof
         layouter
@@ -223,46 +174,8 @@ impl TestCircuit {
                         || "a",
                         vanilla_plonk_config.phase_1_column,
                         0,
-                        || Value::known(self.a),
+                        || Value::known(Fr::from(value)),
                     )
-                    // let offset = 0;
-                    // vanilla_plonk_config
-                    //     .selector
-                    //     .enable(&mut region, offset)
-                    //     .unwrap();
-                    // let a = region
-                    //     .assign_advice(
-                    //         || "a",
-                    //         vanilla_plonk_config.phase_1_column,
-                    //         offset,
-                    //         || Value::known(self.a),
-                    //     )
-                    //     .unwrap();
-                    // region
-                    //     .assign_advice(
-                    //         || "one",
-                    //         vanilla_plonk_config.phase_1_column,
-                    //         offset + 1,
-                    //         || Value::known(Fr::one()),
-                    //     )
-                    //     .unwrap();
-                    // let b = region
-                    //     .assign_advice(
-                    //         || "b",
-                    //         vanilla_plonk_config.phase_1_column,
-                    //         offset + 2,
-                    //         || Value::known(self.b),
-                    //     )
-                    //     .unwrap();
-                    // let c = region
-                    //     .assign_advice(
-                    //         || "c",
-                    //         vanilla_plonk_config.phase_1_column,
-                    //         offset + 3,
-                    //         || Value::known(self.c),
-                    //     )
-                    //     .unwrap();
-                    // Ok(a)
                 },
             )
             .unwrap()
@@ -302,13 +215,6 @@ mod tests {
             (builder, config_params)
         };
 
-        println!("1");
-
-        // MockProver::run(10, &builder, vec![])
-        //     // .unwrap()
-        //     // .assert_satisfied();
-        //     ;
-        println!("2");
         let params = ParamsKZG::<Bn256>::setup(10, OsRng);
         let vk = keygen_vk(&params, &builder).expect("vk should not fail");
         let pk = keygen_pk(&params, vk, &builder).expect("pk should not fail");
