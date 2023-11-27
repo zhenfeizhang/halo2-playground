@@ -7,13 +7,15 @@ use halo2_base::{
     },
     halo2_proofs::{
         self,
-        circuit::{Layouter, SimpleFloorPlanner, Value},
+        circuit::{Layouter, Region, SimpleFloorPlanner, Value},
         plonk::{Advice, Assigned, Circuit, Column, ConstraintSystem, Error, FirstPhase},
     },
     AssignedValue,
 };
 use halo2_proofs::halo2curves;
 use halo2curves::bn256::Fr;
+
+const K: usize = 7;
 
 #[derive(Clone)]
 pub struct TestConfig {
@@ -38,8 +40,8 @@ impl TestConfig {
         };
 
         let base_circuit_param = BaseCircuitParams {
-            k: 10,
-            num_advice_per_phase: vec![1],
+            k: K,
+            num_advice_per_phase: vec![1, 1],
             num_fixed: 1,
             num_lookup_advice_per_phase: vec![],
             lookup_bits: None,
@@ -105,30 +107,75 @@ impl Circuit<Fr> for TestCircuit {
             value: Assigned::Trivial(value),
             cell: Some(copy_manager.load_external_cell(halo2_proof_cell.cell())),
         };
-
+        println!("copy manager before dropped: {:?}", copy_manager);
         drop(copy_manager);
+        println!("dropped");
 
-        // compute c with halo2-lib's gate
-        let ctx = base_circuit_builder.main(0);
+        println!("\n\nphase 1");
+        // compute c with halo2-lib's first phase gate
+        let (a, b) = {
+            let ctx = base_circuit_builder.main(0);
 
-        let a = ctx.load_witness(self.a);
-        let b = ctx.load_witness(self.b);
-        let c = self.gate_chip.add(ctx, a, b);
+            let a = ctx.load_witness(self.a);
+            let b = ctx.load_witness(self.b);
+            let c = self.gate_chip.add(ctx, a, b);
 
-        let c2 = ctx.load_witness(self.c);
-        ctx.constrain_equal(&halo2_lib_cell, &c2);
-        ctx.constrain_equal(&halo2_lib_cell, &c);
-        base_circuit_builder.synthesize(config.base_circuit_config, layouter)?;
+            let c2 = ctx.load_witness(self.c);
+            ctx.constrain_equal(&halo2_lib_cell, &c2);
+            ctx.constrain_equal(&halo2_lib_cell, &c);
+            base_circuit_builder.synthesize_ref_layouter_phase_0(
+                config.base_circuit_config.clone(),
+                &mut layouter,
+            )?;
+            (a, b)
+        };
 
+        println!("\n\nphase 2");
+        // compute c with halo2-lib's second phase gate
+        {
+            let ctx = base_circuit_builder.main(1);
+            let c3 = self.gate_chip.add(ctx, a, b);
+
+            println!("a: {:?}", a.cell);
+            println!("b: {:?}", b.cell);
+            println!("c3: {:?}", c3.cell);
+
+            ctx.constrain_equal(&halo2_lib_cell, &c3);
+            base_circuit_builder.synthesize_ref_layouter_phase_1(
+                config.base_circuit_config.clone(),
+                &mut layouter,
+            )?;
+        }
+        println!("config: {:?}", config.base_circuit_config);
+        // println!("layouter: {:?}", layouter.namespace(||"base phase 1 + constants assignments + copy constraints" ));
+        // println!("layouter: {:?}", layouter.get_root());
+        println!("finished");
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use halo2_base::halo2_proofs::dev::MockProver;
+    use halo2_base::{
+        halo2_proofs::{
+            dev::MockProver,
+            halo2curves::{
+                bn256::Bn256,
+                ff::{FromUniformBytes, WithSmallOrderMulGroup},
+            },
+            plonk::{keygen_pk, keygen_vk, ProvingKey},
+            poly::{
+                commitment::{CommitmentScheme, ParamsProver},
+                kzg::commitment::{KZGCommitmentScheme, ParamsKZG},
+            },
+            transcript::{Blake2bWrite, Challenge255, TranscriptWriterBuffer},
+        },
+        utils::testing::{check_proof_with_instances, gen_proof},
+    };
+    use rand_core::OsRng;
 
     use super::*;
+
     #[test]
     fn test_circuit() {
         let base_circuit_builder = BaseCircuitBuilder::new(false);
@@ -140,7 +187,18 @@ mod tests {
             b: Fr::from(2),
             c: Fr::from(3),
         };
-        let prover = MockProver::<Fr>::run(12, &circuit, vec![]).unwrap();
+        let prover = MockProver::<Fr>::run(4, &circuit, vec![]).unwrap();
+        println!("finished mock run");
         prover.assert_satisfied();
+        // let params = ParamsKZG::<Bn256>::new(K as u32);
+
+        // let vk = keygen_vk(&params, &circuit).unwrap();
+        // let pk = keygen_pk(&params, vk.clone(), &circuit).unwrap();
+
+        // // let mut transcript = Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+
+        // let proof = gen_proof(&params, &pk, circuit);
+
+        // check_proof_with_instances(&params, &vk, &proof, &[], true);
     }
 }
