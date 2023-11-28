@@ -77,6 +77,7 @@ impl Circuit<Fr> for TestCircuit {
         ctx.constrain_equal(&c2, &c3);
 
         base_circuit_builder.synthesize(config.base_circuit_config, layouter)?;
+        base_circuit_builder.clear();
         println!("finished");
         Ok(())
     }
