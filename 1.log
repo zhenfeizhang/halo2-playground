@@ -1,0 +1,107 @@
+
+running 1 test
+test tests::test_circuit ... FAILED
+
+failures:
+
+---- tests::test_circuit stdout ----
+const equality: []
+Start:   SimpleFloorPlanner synthesize
+··Start:   assign region: halo2 proof
+····Start:   assign region 1st pass: halo2 proof
+····End:     assign region 1st pass: halo2 proof ...................................1.470µs
+····Start:   assign region 2nd pass: halo2 proof
+····End:     assign region 2nd pass: halo2 proof ...................................2.050µs
+··End:     assign region: halo2 proof ..............................................14.771µs
+copy manager before dropped: CopyConstraintManager { advice_equalities: [], constant_equalities: [], external_cell_count: 1, assigned_advices: {ContextCell { type_id: TypeId { t: 229062530972436573580751381628283361412 }, context_id: 0, offset: 0 }: Cell { region_index: RegionIndex(0), row_offset: 0, column: Column { index: 0, column_type: Advice } }}, assigned_constants: {}, assigned: OnceLock(<uninit>) }
+dropped
+
+
+phase 1
+··Start:   assign region: base phase 0
+····Start:   assign region 1st pass: base phase 0
+region before phase 0: Region { region: RegionShape { region_index: RegionIndex(1), columns: {}, row_count: 0 } }
+region after phase 0: Region { region: RegionShape { region_index: RegionIndex(1), columns: {Column(Column { index: 1, column_type: Advice }), Selector(Selector(0, true))}, row_count: 7 } }
+····End:     assign region 1st pass: base phase 0 ..................................9.410µs
+····Start:   assign region 2nd pass: base phase 0
+region before phase 0: Region { region: SingleChipLayouterRegion { layouter: SingleChipLayouter { regions: [RegionStart(0), RegionStart(0)], columns: {Column(Column { index: 1, column_type: Advice }): 7, Selector(Selector(0, true)): 7, Column(Column { index: 0, column_type: Advice }): 1} }, region_index: RegionIndex(1) } }
+region after phase 0: Region { region: SingleChipLayouterRegion { layouter: SingleChipLayouter { regions: [RegionStart(0), RegionStart(0)], columns: {Column(Column { index: 1, column_type: Advice }): 7, Selector(Selector(0, true)): 7, Column(Column { index: 0, column_type: Advice }): 1} }, region_index: RegionIndex(1) } }
+····End:     assign region 2nd pass: base phase 0 ..................................13.850µs
+··End:     assign region: base phase 0 .............................................30.380µs
+
+
+phase 2
+const equality: []
+a: Some(ContextCell { type_id: TypeId { t: 27636091137309212942491547519234772204 }, context_id: 0, offset: 0 })
+b: Some(ContextCell { type_id: TypeId { t: 27636091137309212942491547519234772204 }, context_id: 0, offset: 1 })
+c3: Some(ContextCell { type_id: TypeId { t: 50544197472745682527580924408978413332 }, context_id: 0, offset: 3 })
+··Start:   assign region: base phase 1
+····Start:   assign region 1st pass: base phase 1
+region before phase 1: Region { region: RegionShape { region_index: RegionIndex(2), columns: {}, row_count: 0 } }
+base gate len: 2
+region after phase 1: Region { region: RegionShape { region_index: RegionIndex(2), columns: {Selector(Selector(1, true)), Column(Column { index: 2, column_type: Advice { phase: Phase(1) } })}, row_count: 4 } }
+····End:     assign region 1st pass: base phase 1 ..................................3.650µs
+····Start:   assign region 2nd pass: base phase 1
+region before phase 1: Region { region: SingleChipLayouterRegion { layouter: SingleChipLayouter { regions: [RegionStart(0), RegionStart(0), RegionStart(0)], columns: {Column(Column { index: 1, column_type: Advice }): 7, Selector(Selector(1, true)): 4, Column(Column { index: 2, column_type: Advice { phase: Phase(1) } }): 4, Column(Column { index: 0, column_type: Advice }): 1, Selector(Selector(0, true)): 7} }, region_index: RegionIndex(2) } }
+base gate len: 2
+region after phase 1: Region { region: SingleChipLayouterRegion { layouter: SingleChipLayouter { regions: [RegionStart(0), RegionStart(0), RegionStart(0)], columns: {Column(Column { index: 1, column_type: Advice }): 7, Selector(Selector(1, true)): 4, Column(Column { index: 2, column_type: Advice { phase: Phase(1) } }): 4, Column(Column { index: 0, column_type: Advice }): 1, Selector(Selector(0, true)): 7} }, region_index: RegionIndex(2) } }
+····End:     assign region 2nd pass: base phase 1 ..................................9.970µs
+··End:     assign region: base phase 1 .............................................20.910µs
+config: BaseConfig { base: WithoutRange(FlexGateConfig { basic_gates: [[BasicGateConfig { q_enable: Selector(0, true), value: Column { index: 1, column_type: Advice }, _marker: PhantomData<halo2curves::bn256::fr::Fr> }], [BasicGateConfig { q_enable: Selector(1, true), value: Column { index: 2, column_type: Advice { phase: Phase(1) } }, _marker: PhantomData<halo2curves::bn256::fr::Fr> }]], constants: [Column { index: 0, column_type: Fixed }], max_rows: 119 }), instance: [] }
+finished
+End:     SimpleFloorPlanner synthesize .............................................103.281µs
+Start:   SimpleFloorPlanner synthesize
+··Start:   assign region: halo2 proof
+····Start:   assign region 1st pass: halo2 proof
+····End:     assign region 1st pass: halo2 proof ...................................290ns
+····Start:   assign region 2nd pass: halo2 proof
+····End:     assign region 2nd pass: halo2 proof ...................................290ns
+··End:     assign region: halo2 proof ..............................................5.300µs
+copy manager before dropped: CopyConstraintManager { advice_equalities: [], constant_equalities: [], external_cell_count: 1, assigned_advices: {ContextCell { type_id: TypeId { t: 229062530972436573580751381628283361412 }, context_id: 0, offset: 0 }: Cell { region_index: RegionIndex(0), row_offset: 0, column: Column { index: 0, column_type: Advice } }}, assigned_constants: {}, assigned: OnceLock(<uninit>) }
+dropped
+
+
+phase 1
+··Start:   assign region: base phase 0
+····Start:   assign region 1st pass: base phase 0
+region before phase 0: Region { region: RegionShape { region_index: RegionIndex(1), columns: {}, row_count: 0 } }
+region after phase 0: Region { region: RegionShape { region_index: RegionIndex(1), columns: {Selector(Selector(0, true)), Column(Column { index: 1, column_type: Advice })}, row_count: 7 } }
+····End:     assign region 1st pass: base phase 0 ..................................3.090µs
+····Start:   assign region 2nd pass: base phase 0
+region before phase 0: Region { region: SingleChipLayouterRegion { layouter: SingleChipLayouter { regions: [RegionStart(0), RegionStart(0)], columns: {Column(Column { index: 0, column_type: Advice }): 1, Column(Column { index: 1, column_type: Advice }): 7, Selector(Selector(0, true)): 7} }, region_index: RegionIndex(1) } }
+region after phase 0: Region { region: SingleChipLayouterRegion { layouter: SingleChipLayouter { regions: [RegionStart(0), RegionStart(0)], columns: {Column(Column { index: 0, column_type: Advice }): 1, Column(Column { index: 1, column_type: Advice }): 7, Selector(Selector(0, true)): 7} }, region_index: RegionIndex(1) } }
+····End:     assign region 2nd pass: base phase 0 ..................................4.350µs
+··End:     assign region: base phase 0 .............................................12.210µs
+
+
+phase 2
+a: Some(ContextCell { type_id: TypeId { t: 27636091137309212942491547519234772204 }, context_id: 0, offset: 0 })
+b: Some(ContextCell { type_id: TypeId { t: 27636091137309212942491547519234772204 }, context_id: 0, offset: 1 })
+c3: Some(ContextCell { type_id: TypeId { t: 50544197472745682527580924408978413332 }, context_id: 0, offset: 3 })
+··Start:   assign region: base phase 1
+····Start:   assign region 1st pass: base phase 1
+region before phase 1: Region { region: RegionShape { region_index: RegionIndex(2), columns: {}, row_count: 0 } }
+base gate len: 2
+region after phase 1: Region { region: RegionShape { region_index: RegionIndex(2), columns: {Selector(Selector(1, true)), Column(Column { index: 2, column_type: Advice { phase: Phase(1) } })}, row_count: 4 } }
+····End:     assign region 1st pass: base phase 1 ..................................2.680µs
+····Start:   assign region 2nd pass: base phase 1
+region before phase 1: Region { region: SingleChipLayouterRegion { layouter: SingleChipLayouter { regions: [RegionStart(0), RegionStart(0), RegionStart(0)], columns: {Selector(Selector(0, true)): 7, Column(Column { index: 0, column_type: Advice }): 1, Column(Column { index: 1, column_type: Advice }): 7, Selector(Selector(1, true)): 4, Column(Column { index: 2, column_type: Advice { phase: Phase(1) } }): 4} }, region_index: RegionIndex(2) } }
+base gate len: 2
+region after phase 1: Region { region: SingleChipLayouterRegion { layouter: SingleChipLayouter { regions: [RegionStart(0), RegionStart(0), RegionStart(0)], columns: {Selector(Selector(0, true)): 7, Column(Column { index: 0, column_type: Advice }): 1, Column(Column { index: 1, column_type: Advice }): 7, Selector(Selector(1, true)): 4, Column(Column { index: 2, column_type: Advice { phase: Phase(1) } }): 4} }, region_index: RegionIndex(2) } }
+····End:     assign region 2nd pass: base phase 1 ..................................7.210µs
+··End:     assign region: base phase 1 .............................................14.400µs
+config: BaseConfig { base: WithoutRange(FlexGateConfig { basic_gates: [[BasicGateConfig { q_enable: Selector(0, true), value: Column { index: 1, column_type: Advice }, _marker: PhantomData<halo2curves::bn256::fr::Fr> }], [BasicGateConfig { q_enable: Selector(1, true), value: Column { index: 2, column_type: Advice { phase: Phase(1) } }, _marker: PhantomData<halo2curves::bn256::fr::Fr> }]], constants: [Column { index: 0, column_type: Fixed }], max_rows: 119 }), instance: [] }
+finished
+End:     SimpleFloorPlanner synthesize .............................................47.620µs
+finished mock run
+thread 'tests::test_circuit' panicked at /home/z/.cargo/git/checkouts/halo2-189ea3cf7f17e3ad/3d44389/halo2_proofs/src/dev.rs:1280:62:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+const equality: []
+
+
+failures:
+    tests::test_circuit
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

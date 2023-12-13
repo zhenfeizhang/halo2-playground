@@ -43,7 +43,7 @@ impl TestConfig {
             k: K,
             num_advice_per_phase: vec![1, 1],
             num_fixed: 1,
-            num_lookup_advice_per_phase: vec![],
+            num_lookup_advice_per_phase: vec![1,1],
             lookup_bits: None,
             num_instance_columns: 0,
         };
@@ -127,12 +127,14 @@ impl Circuit<Fr> for TestCircuit {
                 config.base_circuit_config.clone(),
                 &mut layouter,
             )?;
+            // base_circuit_builder.clear();
             (a, b)
         };
 
         println!("\n\nphase 2");
         // compute c with halo2-lib's second phase gate
         {
+            // base_circuit_builder.clear();
             let ctx = base_circuit_builder.main(1);
             let c3 = self.gate_chip.add(ctx, a, b);
 
@@ -149,6 +151,12 @@ impl Circuit<Fr> for TestCircuit {
         println!("config: {:?}", config.base_circuit_config);
         // println!("layouter: {:?}", layouter.namespace(||"base phase 1 + constants assignments + copy constraints" ));
         // println!("layouter: {:?}", layouter.get_root());
+        base_circuit_builder.synthesize_ref_layouter_final(
+            config.base_circuit_config.clone(),
+            &mut layouter,
+            true
+        )?;
+        base_circuit_builder.clear();
         println!("finished");
         Ok(())
     }
@@ -190,15 +198,15 @@ mod tests {
         let prover = MockProver::<Fr>::run(4, &circuit, vec![]).unwrap();
         println!("finished mock run");
         prover.assert_satisfied();
-        // let params = ParamsKZG::<Bn256>::new(K as u32);
+        let params = ParamsKZG::<Bn256>::new(K as u32);
 
-        // let vk = keygen_vk(&params, &circuit).unwrap();
-        // let pk = keygen_pk(&params, vk.clone(), &circuit).unwrap();
+        let vk = keygen_vk(&params, &circuit).unwrap();
+        let pk = keygen_pk(&params, vk.clone(), &circuit).unwrap();
 
-        // // let mut transcript = Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
+        // let mut transcript = Blake2bWrite::<_, _, Challenge255<_>>::init(vec![]);
 
-        // let proof = gen_proof(&params, &pk, circuit);
+        let proof = gen_proof(&params, &pk, circuit);
 
-        // check_proof_with_instances(&params, &vk, &proof, &[], true);
+        check_proof_with_instances(&params, &vk, &proof, &[], true);
     }
 }
